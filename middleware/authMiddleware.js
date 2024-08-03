@@ -14,7 +14,7 @@ const authMiddleware = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); // Use the correct secret key 
+        const decoded = jwt.verify(token, process.env.SECRET_KEY); // Use the correct secret key 
 
         //in .env file i have used "JWT_SECRET_KEY" to write my secret key 
         
