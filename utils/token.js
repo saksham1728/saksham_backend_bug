@@ -1,6 +1,5 @@
-const jwt = require("jsonwebtoken");
+import jwt from 'jsonwebtoken'; // Import jwt using ES module syntax
 
-const createNewToken = (payload) => {
-    return jwt.sign({ userId: payload }, process.getuid.SECRET_KEY, { expiresIn: '10d' });
-}
-
+export const createNewToken = (payload) => {
+    return jwt.sign({ userId: payload }, process.env.JWT_SECRET_KEY, { expiresIn: '10d' }); // Correctly use 'process.env.JWT_SECRET_KEY'
+};

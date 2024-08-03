@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+import mongoose from 'mongoose'; // Import mongoose using ES module syntax
 
 const sellerSchema = new mongoose.Schema({
     name: {
@@ -16,13 +16,13 @@ const sellerSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "seller"
+        default: "Seller", // changed seller to Seller
     },
     shopName: {
         type: String,
         unique: true,
-        required: true
-    }
+        required: true,
+    },
 });
 
-moduleexports = mongoose.model("seller", sellerSchema)
+export default mongoose.model("seller", sellerSchema); // Export the model using ES module syntax

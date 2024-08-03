@@ -1,8 +1,14 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config();
+//We use Import 
+//We set up type:"module" in pacakge.json to run the es file 
 
-// MongoDB URL
+
+import { connect, Schema, model } from 'mongoose';
+import { config } from 'dotenv';
+config();
+
+//we created a dot env file with mongo url 
+
+
 const mongoURL = process.env.MONGO_URL;
 
 console.log(`
@@ -13,7 +19,7 @@ Note: It worked if it ends with "Dummy data created!"
 `)
 
 // Connect to MongoDB
-mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
+connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('MongoDB connected...');
     createDummyData();  // Call function to create dummy data
@@ -21,7 +27,7 @@ mongoose.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch(err => console.log(err));
 
 // Customer Schema
-const customerSchema = new mongoose.Schema({
+const customerSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -73,7 +79,7 @@ const customerSchema = new mongoose.Schema({
       type: Number
     },
     seller: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'seller'
     },
   }],
@@ -99,12 +105,12 @@ const customerSchema = new mongoose.Schema({
   }
 });
 
-const Customer = mongoose.model("customer", customerSchema);
+const Customer = model("customer", customerSchema);
 
 // Order Schema
-const orderSchema = new mongoose.Schema({
+const orderSchema = new Schema({
   buyer: {
-    type: mongoose.Schema.ObjectId,
+    type: Schema.ObjectId,
     ref: "customer",
     required: true,
   },
@@ -168,7 +174,7 @@ const orderSchema = new mongoose.Schema({
       type: Number
     },
     seller: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'seller'
     },
   }],
@@ -218,10 +224,10 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
-const Order = mongoose.model("order", orderSchema);
+const Order = model("order", orderSchema);
 
 // Product Schema
-const productSchema = new mongoose.Schema({
+const productSchema = new Schema({
   productName: {
     type: String
   },
@@ -263,7 +269,7 @@ const productSchema = new mongoose.Schema({
       type: String,
     },
     reviewer: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "customer",
     },
     date: {
@@ -272,15 +278,15 @@ const productSchema = new mongoose.Schema({
     },
   }],
   seller: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'seller'
   },
 }, { timestamps: true });
 
-const Product = mongoose.model("product", productSchema);
+const Product = model("product", productSchema);
 
 // Seller Schema
-const sellerSchema = new mongoose.Schema({
+const sellerSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -305,7 +311,7 @@ const sellerSchema = new mongoose.Schema({
   }
 });
 
-const Seller = mongoose.model("seller", sellerSchema);
+const Seller = model("seller", sellerSchema);
 
 // Function to create dummy data
 async function createDummyData() {
@@ -382,4 +388,4 @@ async function createDummyData() {
   console.log('Dummy data created!');
 }
 
-module.exports = { Customer, Order, Product, Seller };
+export default { Customer, Order, Product, Seller };

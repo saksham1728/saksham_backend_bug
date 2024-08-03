@@ -1,16 +1,16 @@
-const router = require('express').Router();
-const authMiddleware = require('../middleware/authMiddleware.js');
-
-const {
+import { Router } from 'express';
+import authMiddleware from '../middleware/authMiddleware.js';
+import {
     sellerRegister,
     sellerLogIn
-} = require('../controllers/orderController.js');
-
-const {
+} from '../controllers/sellerController.js';
+import {
     productCreate,
     getProducts,
     getProductDetail,
     searchProductbyCategory,
+    searchProduct,
+    searchProductbySubCategory,
     getSellerProducts,
     updateProduct,
     deleteProduct,
@@ -20,52 +20,55 @@ const {
     addReview,
     getInterestedCustomers,
     getAddedToCartProducts,
-} = require('../controllers/productController.js');
-
-const {
+} from '../controllers/productController.js';
+import {
     customerRegister,
     customerLogIn,
     getCartDetail,
     cartUpdate
-} = require('../controllers/customerController.js');
-
-const {
+} from '../controllers/customerController.js';
+import {
     newOrder,
     getOrderedProductsBySeller
-} = require('../controllers/orderController.js');
+} from '../controllers/orderController.js';
 
+const router = Router();
 
-// Seller
+// Public routes (accessible without authentication)
 router.post('/SellerRegister', sellerRegister);
 router.post('/SellerLogin', sellerLogIn);
+router.post('/CustomerRegister', customerRegister);
+router.post('/CustomerLogin', customerLogIn);
 
-// Product
-router.post('/ProductCreate', productCreate);
-router.get('/getSellerProducts/:id', getSellerProducts);
 router.get('/getProducts', getProducts);
 router.get('/getProductDetail/:id', getProductDetail);
+router.get('/getSellerProducts/:id', getSellerProducts);
 router.get('/getInterestedCustomers/:id', getInterestedCustomers);
 router.get('/getAddedToCartProducts/:id', getAddedToCartProducts);
 
-router.put('/ProductUpdate/:id', updateProduct);
-router.put('/addReview/:id', addReview);
-
-router.get('/searchProduct/:key', searchProductbyCategory);
+router.get('/searchProduct/:key', searchProduct);      // replaced searchProductbyCategory to searchProduct
 router.get('/searchProductbyCategory/:key', searchProductbyCategory);
-router.get('/searchProductbySubCategory/:key', searchProductbyCategory);
+router.get('/searchProductbySubCategory/:key', searchProductbySubCategory);    //replaced searchProductbyCategory to searchProductbySubCategory
+
+// Apply authMiddleware to protect routes below this line
+router.use(authMiddleware);
+
+// Protected routes
+router.put('/ProductUpdate/:id', updateProduct);
+router.post('/addReview/:id', addReview);
 
 router.delete('/DeleteProduct/:id', deleteProduct);
 router.delete('/DeleteProducts/:id', deleteProducts);
-router.delete ('/deleteProductReview/:id', deleteProductReview);
-router.put ('/deleteAllProductReviews/:id', deleteAllProductReviews);
+router.delete('/deleteProductReview/:id', deleteProductReview);
+router.put('/deleteAllProductReviews/:id', deleteAllProductReviews);
 
-// Customer
-router.post('/CustomerRegister', customerRegister);
-router.post('/CustomerLogin', customerLogIn);
 router.get('/getCartDetail/:id', getCartDetail);
 router.put('/CustomerUpdate/:id', cartUpdate);
 
-// Order
 router.post('/newOrder', newOrder);
-router.get('/getOrderedProductsByCustomer/:id', getOrderedProductsBySeller);
 router.get('/getOrderedProductsBySeller/:id', getOrderedProductsBySeller);
+
+// Create product route (protected for sellers)
+router.post('/products', productCreate);
+
+export default router;

@@ -1,6 +1,7 @@
-const mongoose = require("mongoose")
+import mongoose from 'mongoose';
+//Since shipping details are required we set it to require:true 
 
-const customerSchema = mongoose.Schema({
+const customerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -9,7 +10,6 @@ const customerSchema = mongoose.Schema({
         type: String,
         unique: true,
         required: true,
-
     },
     password: {
         type: String,
@@ -54,29 +54,35 @@ const customerSchema = mongoose.Schema({
         },
         seller: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'SELLER'
+            ref: "seller"
         },
     }],
     shippingData: {
         address: {
             type: String,
+            required: true,
         },
         city: {
             type: String,
+            required: true,
         },
         state: {
             type: String,
+            required: true,
         },
         country: {
-            type: Number,
+            type: String, // Change from Number to String as 'USA' is a string
+            required: true,
         },
         pinCode: {
             type: Number,
+            required: true,
         },
         phoneNo: {
             type: Number,
+            required: true,
         },
     }
 });
 
-module.exports = mongoose.model("customer", customerSchema)
+export default mongoose.model("customer", customerSchema);

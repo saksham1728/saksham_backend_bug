@@ -1,31 +1,31 @@
-const bcrypt = require('bcrypt');
-const Seller = require('../models/sellerSchema.js');
-const { createNewToken } = require('../utils/token.js');
+import bcrypt from 'bcrypt'; // Import bcrypt using ES module syntax
+import Seller from '../models/sellerSchema.js'; // Import Seller model using ES module syntax
+import {createNewToken} from '../utils/token.js'; // Import createNewToken using ES module syntax
 
-const sellerRegister = async (req, res) => {
+export const sellerRegister = async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(req.body.password, salt);
 
+        // Create a new seller instance with hashed password
         const seller = new Seller({
             ...req.body,
-            password: bcrypt.hash
+            password: hashedPass // Use hashed password instead of bcrypt.hash
         });
 
+        // Check if seller with the same email or shop name already exists
         const existingSellerByEmail = await Seller.findOne({ email: req.body.email });
         const existingShop = await Seller.findOne({ shopName: req.body.shopName });
 
         if (existingSellerByEmail) {
-            res.send({ message: 'Email already exists' });
-        }
-        else if (existingShop) {
-            res.send({ message: 'Shop name already exists' });
-        }
-        else {
+            return res.send({ message: 'Email already exists' });
+        } else if (existingShop) {
+            return res.send({ message: 'Shop name already exists' });
+        } else {
             let result = await seller.save();
-            result.password = undefined;
+            result.password = undefined; // Remove password from result
 
-            const token = createNewToken(result._id)
+            const token = createNewToken(result._id);
 
             result = {
                 ...result._doc,
@@ -35,23 +35,23 @@ const sellerRegister = async (req, res) => {
             res.send(result);
         }
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json(err); // Return server error if something goes wrong
     }
 };
 
-const sellerLogIn = async (req, res) => {
+export const sellerLogIn = async (req, res) => {
     if (req.body.email && req.body.password) {
         let seller = await Seller.findOne({ email: req.body.email });
         if (seller) {
             const validated = await bcrypt.compare(req.body.password, seller.password);
             if (validated) {
-                seller.password = undefined;
+                seller.password = undefined; // Remove password from result
 
-                const token = createNewToken(seller._id)
+                const token = createNewToken(seller._id);
 
                 seller = {
                     ...seller._doc,
-                    token: tokens
+                    token: token // Correctly assign the token
                 };
 
                 res.send(seller);
@@ -65,5 +65,3 @@ const sellerLogIn = async (req, res) => {
         res.send({ message: "Email and password are required" });
     }
 };
-
-module.exports = { sellerRegister, sellerLogIn };

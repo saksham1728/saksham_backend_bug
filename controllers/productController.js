@@ -1,19 +1,26 @@
-const Product = require("../models/productSchema");
-const Customer = require("../models/customerSchema");
+import Product from "../models/productSchema.js";
+import Customer from "../models/customerSchema.js";
 
-const productCreate = async (req, res) => {
+//Since we are using ES types we use import we dont use require
+//And then we Export All the functions using export before const 
+
+
+export const productCreate = async (req, res) => {
     try {
-        const product = new Product(req.body)
+        // Check if the user is a seller
+        if (req.user.role !== 'Seller') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
 
+        const product = new Product(req.body);
         let result = await product.save();
-
         res.send(result);
     } catch (err) {
         res.status(500).json(err);
     }
 };
 
-const getProducts = async (req, res) => {
+export const getProducts = async (req, res) => {
     try {
         let products = await Product.find().populate("seller", "shopName");
         if (products.length > 0) {
@@ -26,11 +33,11 @@ const getProducts = async (req, res) => {
     }
 };
 
-const getSellerProducts = async (req, res) => {
+export const getSellerProducts = async (req, res) => {
     try {
-        let products = await Product.find({ seller: req.params.id })
+        let products = await Product.find({ seller: req.params.id });
         if (products.length > 0) {
-            res.send(products)
+            res.send(products);
         } else {
             res.send({ message: "No products found" });
         }
@@ -39,7 +46,7 @@ const getSellerProducts = async (req, res) => {
     }
 };
 
-const getProductDetail = async (req, res) => {
+export const getProductDetail = async (req, res) => {
     try {
         let product = await Product.findById(req.params.id)
             .populate("seller", "shopName")
@@ -51,28 +58,47 @@ const getProductDetail = async (req, res) => {
 
         if (product) {
             res.send(product);
-        }
-        else {
+        } else {
             res.send({ message: "No product found" });
         }
     } catch (err) {
         res.status(500).json(err);
     }
-}
+};
 
-const updateProduct = async (req, res) => {
+//To ensure that the owner of the product is only allowed to update the product we did some changes in updateProduct system
+
+export const updateProduct = async (req, res) => {
     try {
-        let result = await Product.findByIdAndUpdate(req.params.id,
-            { $set: req.body },
-            { new: true })
+        const productId = req.params.id;
+        const userId = req.user.id; // Get the user ID from req.user
 
-        res.send(result)
+        // Find the product by ID
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // Check if the current user is the owner of the product
+        if (product.seller.toString() !== userId) {
+            return res.status(403).json({ message: 'Access denied. You are not the owner of this product.' });
+        }
+
+        // Update the product if the user is the owner
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $set: req.body },
+            { new: true }
+        );
+
+        res.send(updatedProduct);
     } catch (error) {
         res.status(500).json(error);
     }
-}
+};
 
-const addReview = async (req, res) => {
+export const addReview = async (req, res) => {
     try {
         const { rating, comment, reviewer } = req.body;
         const productId = req.params.id;
@@ -100,7 +126,7 @@ const addReview = async (req, res) => {
     }
 };
 
-const searchProduct = async (req, res) => {
+export const searchProduct = async (req, res) => {
     try {
         const key = req.params.key;
 
@@ -122,13 +148,14 @@ const searchProduct = async (req, res) => {
     }
 };
 
-const searchProductbyCategory = async (req, res) => {
+export const searchProductbyCategory = async (req, res) => {
     try {
         const key = req.params.key;
 
         let products = await Product.find({
             $or: [
                 { category: { $regex: key, $options: 'i' } },
+                { subcategory: { $regex: key, $options: 'i' }}       //Added Subcategory while searching in categories*
             ]
         }).populate("seller", "shopName");
 
@@ -142,7 +169,7 @@ const searchProductbyCategory = async (req, res) => {
     }
 };
 
-const searchProductbySubCategory = async (req, res) => {
+export const searchProductbySubCategory = async (req, res) => {
     try {
         const key = req.params.key;
 
@@ -162,7 +189,7 @@ const searchProductbySubCategory = async (req, res) => {
     }
 };
 
-const deleteProduct = async (req, res) => {
+export const deleteProduct = async (req, res) => {
     try {
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
 
@@ -177,7 +204,7 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-const deleteProducts = async (req, res) => {
+export const deleteProducts = async (req, res) => {
     try {
         const deletionResult = await Product.deleteMany({ seller: req.params.id });
 
@@ -201,13 +228,18 @@ const deleteProducts = async (req, res) => {
     }
 };
 
-
-const deleteProductReview = async (req, res) => {
+export const deleteProductReview = async (req, res) => {
     try {
         const { reviewId } = req.body;
         const productId = req.params.id;
 
         const product = await Product.findById(productId);
+
+        //if no product exist with that id then throw error
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
 
         const updatedReviews = product.reviews.filter(review => review._id != reviewId);
 
@@ -221,9 +253,16 @@ const deleteProductReview = async (req, res) => {
     }
 };
 
-const deleteAllProductReviews = async (req, res) => {
+export const deleteAllProductReviews = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
+
+        //if no product exist with that id then throw error
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+
         product.reviews = [];
 
         const updatedProduct = await product.save();
@@ -234,7 +273,7 @@ const deleteAllProductReviews = async (req, res) => {
     }
 };
 
-const getInterestedCustomers = async (req, res) => {
+export const getInterestedCustomers = async (req, res) => {
     try {
         const productId = req.params.id;
 
@@ -264,7 +303,7 @@ const getInterestedCustomers = async (req, res) => {
     }
 };
 
-const getAddedToCartProducts = async (req, res) => {
+export const getAddedToCartProducts = async (req, res) => {
     try {
         const sellerId = req.params.id;
 
@@ -305,22 +344,4 @@ const getAddedToCartProducts = async (req, res) => {
     } catch (error) {
         res.status(500).json(error);
     }
-};
-
-module.exports = {
-    productCreate,
-    getProducts,
-    getSellerProducts,
-    getProductDetail,
-    updateProduct,
-    addReview,
-    searchProduct,
-    searchProductbyCategory,
-    searchProductbySubCategory,
-    deleteProduct,
-    deleteProducts,
-    deleteProductReview,
-    deleteAllProductReviews,
-    getInterestedCustomers,
-    getAddedToCartProducts,
 };
